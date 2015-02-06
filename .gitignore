@@ -1,0 +1,6 @@
+*.o
+*.txt
+saveTrains/
+doc/
+Neat/
+RobotLIB/
