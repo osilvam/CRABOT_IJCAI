@@ -1,8 +1,7 @@
-function [y] = POSITION_PLOT(g,p)
-S0 = '../bin/simulation_files/robot_position/robotPosition_G';
-S1 = '_P';
+function [y] = POSITION_PLOT(i)
+S0 = '../bin/simulation_files/robot_position/robotPosition_#';
 S2 = '.txt';
-x = [S0 num2str(g) S1 num2str(p) S2];
+x = [S0 num2str(i) S2];
 A = importdata(x, '\t');
 
 figure

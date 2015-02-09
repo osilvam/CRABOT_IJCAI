@@ -108,7 +108,7 @@ int main(int argc, char* argv[])
 	clog << actions.size() << " " << actions.at(0).size() << endl;
 
 
-	double delta = 0.01;
+	double delta = 0.05;
 	double probability = 0.9;
 	double discount = 0.8;
 
@@ -124,6 +124,7 @@ int main(int argc, char* argv[])
 			double sim_time = 0;
 			bool flag = true;
 			double * pass_pos = new double[3];
+			double * next_pos = new double[3];
 
 			stringstream message1, message2;
 
@@ -152,7 +153,8 @@ int main(int argc, char* argv[])
 			{					
 				state = qvlearning->Eval(state,actions);
 
-				pass_pos = center_dummy->getPosition(-1);
+				next_pos = center_dummy->getPosition(-1);
+				copy(next_pos,next_pos+3,pass_pos);
 
 				simulator->simPauseCommunication(1);
 
@@ -170,19 +172,21 @@ int main(int argc, char* argv[])
 					}
 				}
 
+				usleep((int)(DELTA_T*1000000.0));
+				sim_time += DELTA_T;
+
 				if (flag)
 				{
-					qvlearning->SetResult(getDistance(pass_pos, center_dummy->getPosition(-1)));
+					double results = getDistance(pass_pos, center_dummy->getPosition(-1));
+					clog << "result: " << results << endl;
+					qvlearning->SetResult(results);
 					files->addFileRobotPosition(center_dummy,sim_time);
 				}					
 				else
 				{
 					qvlearning->SetResult(-10);
 					break;
-				}
-
-				usleep((int)(DELTA_T*1000000.0));
-				sim_time += DELTA_T;
+				}				
 			}
 
 			simulator->simStopSimulation(simx_opmode_oneshot_wait);
