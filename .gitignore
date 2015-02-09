@@ -1,5 +1,6 @@
 *.o
 *.txt
+*.tar.gz
 saveTrains/
 doc/
 Neat/
