@@ -13,6 +13,7 @@
 #include <fstream>
 #include <QVLEARNING>
 #include <ROBOTLIB>
+#include "SimFiles.hpp"
 #include "CalcFunctions.hpp"
 #include "Simulation.hpp"
 

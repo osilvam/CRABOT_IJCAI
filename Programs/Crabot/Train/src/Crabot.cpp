@@ -3,6 +3,62 @@
 
 #include "Crabot.hpp"
 
+int sum(int num, int init, int limit)
+{
+	int result = (num < limit) ? num + 1 : init;
+	return result;
+}
+
+vector < vector < double > > MakeActions()
+{
+	int n_legs = N_LEGS;
+	int gl = GRA_LIB;
+	int rep[n_legs];
+	for(int i = 0; i < n_legs; i++)
+		rep[i] = pow(2*gl,i);
+
+	int cont[n_legs];
+	int action_leg[n_legs];
+	for(int i = 0; i < n_legs; i++)
+		cont[i] = action_leg[i] = 0;
+	
+	double moves[6][3] = {{1,0,0},{-1,0,0},{0,1,0},{0,-1,0},{0,0,1},{0,0,-1}};
+
+	vector < vector < double > > actions;
+
+	vector < double > base;
+	for(int j = 0; j < n_legs; j++)
+	{
+		vector < double > leg (moves[action_leg[j]],moves[action_leg[j]] + sizeof(moves[action_leg[j]])/sizeof(double));
+		base.insert(base.end(),leg.begin(),leg.end());
+	}
+
+	actions.push_back(base);
+
+	for(int i = 0; i < pow(2*gl,n_legs); i++)
+	{
+		for(int j = 0; j < n_legs; j++)
+		{
+			cont[j]++;
+			if(cont[j] == rep[j])
+			{
+				cont[j] = 0;
+				action_leg[j] = sum(action_leg[j],0,2*gl-1);
+			}
+		}
+		vector < double > action;
+
+		for(int j = 0; j < n_legs; j++)
+		{
+			vector < double > leg (moves[action_leg[j]],moves[action_leg[j]] + sizeof(moves[action_leg[j]])/sizeof(double));
+			action.insert(action.end(),leg.begin(),leg.end());
+		}
+		actions.push_back(action);
+	}
+
+	return actions;
+}
+
 int main(int argc, char* argv[])
 {	
 	if(argc < 3)
@@ -12,6 +68,8 @@ int main(int argc, char* argv[])
 	}
 
 	RobotSimulator * simulator = new RobotSimulator();
+	SimFiles * files = new SimFiles();
+
 	int n_iteration = atoi(argv[1]);
 	
 	simulator->simStart();
@@ -42,11 +100,19 @@ int main(int argc, char* argv[])
 
 	// ========== QVLEARNING INITIALIZATIONS =========== //
 
-	vector < double > state (N_LEGS*GRA_LIB + GRA_LIB_EXT,0.0);
+	vector < double > state((int)(N_LEGS*GRA_LIB + GRA_LIB_EXT),0.0);
+	vector < vector < double > > actions = MakeActions();
 
-	//FALTA ACTIONS
 
-	QVlearning * qvlearning = new QVlearning(delta, probability, var, argv[2], argv[3]);
+	clog << state.size() << endl;
+	clog << actions.size() << " " << actions.at(0).size() << endl;
+
+
+	double delta = 0.01;
+	double probability = 0.9;
+	double discount = 0.8;
+
+	QVlearning * qvlearning = new QVlearning(delta, probability, discount, argv[2], argv[3]);
 
 	// ================================================ //
 
@@ -57,6 +123,8 @@ int main(int argc, char* argv[])
 		{
 			double sim_time = 0;
 			bool flag = true;
+			double * pass_pos = new double[3];
+
 			stringstream message1, message2;
 
 			for(int i = 0; i < (int)joints.size(); i++)
@@ -69,6 +137,10 @@ int main(int argc, char* argv[])
 			center_dummy->getOrientation(-1);
 			//
 
+			files->openNewRobotPositionFile(p);
+
+			clog << "\t\tIteration #" << p << endl;
+
 			message1 << "Iteration #" << p;
 			simulator->simAddStatusbarMessage((char*)message1.str().c_str() , simx_opmode_oneshot_wait);
 
@@ -77,8 +149,10 @@ int main(int argc, char* argv[])
 			usleep(100000);
 
 			while(sim_time < TIME_SIMULATION)
-			{						
-				state = qvlearning->Eval(state,actions)
+			{					
+				state = qvlearning->Eval(state,actions);
+
+				pass_pos = center_dummy->getPosition(-1);
 
 				simulator->simPauseCommunication(1);
 
@@ -97,10 +171,14 @@ int main(int argc, char* argv[])
 				}
 
 				if (flag)
-					qvlearning->SetResult(center_dummy->getPosition(-1));
+				{
+					qvlearning->SetResult(getDistance(pass_pos, center_dummy->getPosition(-1)));
+					files->addFileRobotPosition(center_dummy,sim_time);
+				}					
 				else
 				{
 					qvlearning->SetResult(-10);
+					break;
 				}
 
 				usleep((int)(DELTA_T*1000000.0));
@@ -111,16 +189,18 @@ int main(int argc, char* argv[])
 
 			if(flag)
 			{					
-				clog << "Traveled distance : " << center_dummy->getPosition(-1) << endl;
-				clog << "Fitness: " << endl;
+				double init_pos[3] = {0.0, 0.0, 0.0};
+				double fitness = getDistance(init_pos, center_dummy->getPosition(-1));
+				
+				clog << "Fitness : " << fitness << endl << endl;
 			
-				message2 << "FITNESS : " << /*ACA VA EL FITNESS*/;
+				message2 << "FITNESS : " << fitness;
 				simulator->simAddStatusbarMessage((char*)message2.str().c_str() , simx_opmode_oneshot_wait);
+
+				files->addFileFitness(fitness, p);
 			}
-			else
-			{	
-				hyperneat->HyperNeatFitness(FAILED_FITNESS, p);
-			}
+
+			files->closeRobotPositionFile();
 		}		
 	}
 		
@@ -128,9 +208,13 @@ int main(int argc, char* argv[])
 
 	delete(simulator);
 	delete(qvlearning);
+	delete(files);
 	
 	return(0);
 
 }
 
+
+
 #endif
+
