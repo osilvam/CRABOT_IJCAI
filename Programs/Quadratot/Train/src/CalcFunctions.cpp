@@ -53,4 +53,11 @@ double stdDesviation(vector < int > numbers)
 	return sqrt(sum/numbers.size());
 }
 
+double getDistance(double init[3], double final[3])
+{		
+	double dx = pow(final[0]-init[0],2);
+	double dy = pow(final[1]-init[1],2);
+	return sqrt(dx + dy);
+}
+
 #endif

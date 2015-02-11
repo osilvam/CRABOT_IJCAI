@@ -52,7 +52,7 @@ vector < double > QVlearning::Eval(vector < double > state, vector < vector < do
 		}
 	}
 
-	if((double)(rand()%101)/100.0 > probability) index = rand()%length_actions;
+	if((double)(rand()%11) > probability) index = rand()%length_actions;
 
 	for (int i = 0; i < length_state; i++)
 	{

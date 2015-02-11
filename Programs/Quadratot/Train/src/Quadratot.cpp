@@ -1,7 +1,7 @@
-#ifndef Crabot_CPP
-#define Crabot_CPP
+#ifndef Quadratot_CPP
+#define Quadratot_CPP
 
-#include "Crabot.hpp"
+#include "Quadratot.hpp"
 
 int sum(int num, int init, int limit)
 {
@@ -13,16 +13,19 @@ vector < vector < double > > MakeActions()
 {
 	int n_legs = N_LEGS;
 	int gl = GRA_LIB;
+	int gle = GRA_LIB_EXT;	
 	int rep[n_legs];
+
 	for(int i = 0; i < n_legs; i++)
 		rep[i] = pow(2*gl,i);
 
 	int cont[n_legs];
 	int action_leg[n_legs];
+
 	for(int i = 0; i < n_legs; i++)
 		cont[i] = action_leg[i] = 0;
 	
-	double moves[6][3] = {{1,0,0},{-1,0,0},{0,1,0},{0,-1,0},{0,0,1},{0,0,-1}};
+	double moves[4][2] = {{1,0},{-1,0},{0,1},{0,-1}};
 
 	vector < vector < double > > temp_actions;
 	vector < vector < double > > actions;
@@ -48,7 +51,6 @@ vector < vector < double > > MakeActions()
 		temp_actions.push_back(action);		
 	}
 
-
 	for(int k = 0; k < (int)temp_actions.size(); k++)
 	{
 		vector < double > action;
@@ -56,12 +58,27 @@ vector < vector < double > > MakeActions()
 		for(int i = 0; i < gl; i++)
 		{
 			for(int j = 0; j < n_legs; j++)
-			{
-				action.push_back(temp_actions.at(k).at(i + gl*j))
+			{		
+				action.push_back(temp_actions.at(k).at(i + gl*j));
 			}
 		}
 
 		actions.push_back(action);	
+	}	
+
+	if(gle != 0)
+	{
+		temp_actions = actions;
+		actions.clear();
+		double act[3] = {-1,0,1};
+
+		for(int j = 0; j < 3; j++)
+			for (int i = 0; i < (int)temp_actions.size(); i++)
+			{
+				vector < double > aux(temp_actions.at(i));
+				aux.push_back(act[j]);
+				actions.push_back(aux);
+			}
 	}
 
 	return actions;
@@ -93,11 +110,11 @@ int main(int argc, char* argv[])
 	for(int i = 0; i < N_LEGS*GRA_LIB + GRA_LIB_EXT; i++)
 	{
 		stringstream joint;
-		joint << "joint" << i+6;
+		joint << "joint" << i;
 		joints.push_back(new Joint(simulator ,(char*)joint.str().c_str(), max_angle_limit[i], min_angle_limit[i], (char*)"SCALE"));
 	}
 
-	for(int i = 0; i < 13; i++)
+	for(int i = 0; i < 16; i++)
 	{
 		stringstream body_part;
 		body_part << "Collision" << i << "#";
@@ -166,7 +183,7 @@ int main(int argc, char* argv[])
 
 				simulator->simPauseCommunication(0);				
 
-				for(int i = 6; i < (int)body_parts.size(); i++)
+				for(int i = 4; i < (int)body_parts.size(); i++)
 				{
 					if(body_parts.at(i)->getCollisionState() != 0)
 					{

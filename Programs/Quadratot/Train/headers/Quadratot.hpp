@@ -1,5 +1,5 @@
-#ifndef Crabot_HPP
-#define Crabot_HPP
+#ifndef Quadratot_HPP
+#define Quadratot_HPP
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,16 +11,15 @@
 #include <time.h>
 #include <sys/time.h>
 #include <fstream>
-#include <HYPERNEAT>
+#include <QVLEARNING>
 #include <ROBOTLIB>
-#include "CalcFunctions.hpp"
-#include "Fitness.hpp"
 #include "SimFiles.hpp"
+#include "CalcFunctions.hpp"
 #include "Simulation.hpp"
 
 using namespace std;
 using namespace ANN_USM;
 
-#define NAME_TEST "CRABOT"
+#define NAME_TEST "QUADRATOT"
 
 #endif
