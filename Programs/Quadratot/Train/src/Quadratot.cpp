@@ -226,6 +226,9 @@ int main(int argc, char* argv[])
 			}
 
 			files->closeRobotPositionFile();
+
+			qvlearning->Train();
+
 		}		
 	}
 		
