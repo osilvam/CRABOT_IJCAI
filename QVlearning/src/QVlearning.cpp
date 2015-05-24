@@ -41,7 +41,15 @@ vector < double > QVlearning::Eval(vector < double > state, vector < vector < do
 		double Q;
 
 		inputs.insert(inputs.end(), state.begin(), state.end());
-		inputs.insert(inputs.end(), actions.at(i).begin(), actions.at(i).end());
+
+		vector < double > aux_next_state;
+		for (int k = 0; k < length_state; k++)
+		{
+			double aux = state.at(k) + delta*actions.at(i).at(k);
+			aux_next_state.at(i) = (abs(aux) > 1) ? aux/abs(aux) : aux;
+		}
+
+		inputs.insert(inputs.end(), aux_next_state.begin(), aux_next_state.end());
 
 		Q = (organism.eval(inputs)).at(0);
 
@@ -62,27 +70,38 @@ vector < double > QVlearning::Eval(vector < double > state, vector < vector < do
 
 	vector < double > inputs;
 	inputs.insert(inputs.end(), state.begin(), state.end());
-	inputs.insert(inputs.end(), actions.at(index).begin(), actions.at(index).end());
-	temp_input.push_back(inputs);
+	inputs.insert(inputs.end(), next_state.begin(), next_state.end());
+
+	TS_input.push_back(inputs);
+	TS_teoric_output.push_back((organism.eval(inputs)).at(0));
 
 	return next_state;
 }
 
 void QVlearning::SetResult(double result)
 {
-	temp_output.push_back(result);
+	TS_output.push_back(FUNCTION(result + discount*TS_teoric_output.back()));
+}
+
+void QVlearning::SetResult()
+{
+	TS_output.push_back(-1.0);
 }
 
 bool QVlearning::Train()
 {
-	if ((int)temp_output.size() != (int)temp_input.size())
+	if ((int)TS_output.size() != (int)TS_input.size())
 	{
 		clog << "ERROR: Inputs and outputs in training set is not equal" << endl;
 		return false;
 	}
-	
-	AddToTrainingSet();
 
+	if ((int)TS_output.size() == 0)
+	{
+		clog << "The training set is empty and the training can not be realized";
+		return false;
+	}
+	
 	srand(time(0));
 
 	char neatname[] = "NEAT";
@@ -100,6 +119,10 @@ bool QVlearning::Train()
 
 	organism = poblacion.champion;
 
+	TS_output.clear();
+	TS_input.clear();
+	TS_teoric_output.clear();
+
 	return true;
 }
 
@@ -112,42 +135,6 @@ double QVlearning::Fitness(Genetic_Encoding organism)
 		error_sum += abs(TS_output.at(i) - (organism.eval(TS_input.at(i))).at(0));
 
 	return pow(length_TS - error_sum, 2);
-}
-
-void QVlearning::AddToTrainingSet()
-{
-	int length_TS = (int)TS_input.size();
-	int length_temp = (int)temp_input.size();
-
-	for (int i = 0; i < length_temp; i++)
-	{
-		bool exist = false;
-
-		for (int j = 0; j < length_TS; j++)
-		{
-			if (temp_input.at(i) == TS_input.at(j))
-			{
-				exist = true;
-				temp_output.at(i) = FUNCTION(temp_output.at(i) + discount*TS_output.at(j));
-
-				if (temp_output.at(i) > TS_output.at(j))
-				{					
-					TS_output.at(j) = temp_output.at(i);
-					break;
-				}
-			}
-		}
-
-		if (!exist)
-		{
-			temp_output.at(i) = FUNCTION(temp_output.at(i));
-			TS_input.push_back(temp_input.at(i));
-			TS_output.push_back(temp_output.at(i));
-		}
-	}
-
-	temp_input.clear();
-	temp_output.clear();
 }
 
 #endif

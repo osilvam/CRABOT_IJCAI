@@ -143,7 +143,7 @@ int main(int argc, char* argv[])
 		{
 			double sim_time = 0;
 			bool flag = true;
-			double pass_pos[3];
+			double pass_pos[3] = {0.0, 0.0, 0.0};
 			double next_pos[3];
 
 			stringstream message1, message2;
@@ -174,8 +174,6 @@ int main(int argc, char* argv[])
 			{					
 				state = qvlearning->Eval(state,actions);
 
-				center_dummy->getPosition(-1, pass_pos);
-
 				simulator->simPauseCommunication(1);
 
 				for(int i = 0; i < (int)joints.size(); i++)
@@ -199,11 +197,15 @@ int main(int argc, char* argv[])
 				{
 					center_dummy->getPosition(-1, next_pos);
 					qvlearning->SetResult(getDistance(pass_pos, next_pos));
+
+					for(int i = 0; i < 3; i++)
+						pass_pos[i] = next_pos[i];
+
 					files->addFileRobotPosition(center_dummy,sim_time);
 				}					
 				else
 				{
-					qvlearning->SetResult(-10);
+					qvlearning->SetResult();
 					break;
 				}				
 			}
