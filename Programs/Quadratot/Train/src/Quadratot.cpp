@@ -110,7 +110,7 @@ int main(int argc, char* argv[])
 	for(int i = 0; i < N_LEGS*GRA_LIB + GRA_LIB_EXT; i++)
 	{
 		stringstream joint;
-		joint << "joint" << i;
+		joint << "joint" << i << "#";
 		joints.push_back(new Joint(simulator ,(char*)joint.str().c_str(), max_angle_limit[i], min_angle_limit[i], (char*)"SCALE"));
 	}
 
